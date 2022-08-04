@@ -1,0 +1,509 @@
+openapi: 3.0.1
+info:
+  title: PushSDK WPS API
+  description: API SDK backend
+  version: 1.0.3
+servers:
+
+  - url: "http://localhost:5050/v1" 
+
+paths:
+  /probe:
+    get:
+      tags:
+        - "probe"
+      summary: Probe Check
+      description: >-
+        Пробник балансировщика F5 interval 5 passdetect interval 10 request method get url /probe   expect status 200
+      responses:
+        "200":
+          description: Health Check report
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Probecheck"
+              example: |-
+                {
+                  "generated_at": "2015-06-25T14:33:33.383Z",
+                  "duration_millis": "15.8"
+                }
+
+
+
+  /messages/search:
+    post:
+      tags:
+        - messagesapi
+      summary: Поиск сообщений по заданному фильтру
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/SearchMessagesRequest"
+        required: true
+      responses:
+        "200":
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/SearchMessagesResponse"
+        "400":
+          description: Некорректное тело запроса
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+        "500":
+          description: Ошибка сервера
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+
+  /messages/count:
+    post:
+      tags:
+        - messagesapi
+      summary: Получить количество сообщений по заданному фильтру (возвращает число НЕ прочитанных и НЕ удаленных сообщений)
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/CountMessagesRequest"
+        required: true
+      responses:
+        "200":
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/CountResponse"
+        "400":
+          description: Некорректное тело запроса
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+        "500":
+          description: Ошибка сервера
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+
+  /messages/update:
+    post:
+      tags:
+        - messagesapi
+      summary: Обновление сообщений по заданному фильтру
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/UpdateMessagesRequest"
+        required: true
+      responses:
+        "200":
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/UpdateMessagesResponse"
+        "400":
+          description: Некорректное тело запроса
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+        "500":
+          description: Ошибка сервера
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+  
+
+components:
+  schemas:
+    Probecheck:
+      required:
+        - duration_millis
+        - generated_at
+        - tests
+      type: object
+      properties:
+        generated_at:
+          type: string
+          description: >-
+            The date and time representing the start of the healthcheck
+            report
+          format: date-time
+        duration_millis:
+          type: number
+          description: >-
+            The number of milliseconds that the healthecheck report took to
+            generate
+
+   
+
+    ErrorResponse:
+      type: object
+      properties:
+        result:
+          type: string
+          description: Результат выполнения
+        message:
+          type: string
+          description: Расшифровка результата выполнения
+
+  
+
+    UpdateMessageUNCRequest:
+      type: object
+      required:
+        - message_id
+        - user_flags
+      properties:
+        message_id:
+          type: array
+          items:
+            type: string
+            example: "75b0f5a1-c0d9-4341..."
+          description: Идентификатор(ы) сообщения(ий) - UUID
+        user_flags:
+          type: object
+          description: Флаги для обновления
+          properties:
+            read:
+              type: boolean
+              example: true
+            deleted:
+              type: boolean
+              example: false
+
+    SearchMessagesRequest:
+      type: object
+      required:
+        - idToken
+        - filter
+      properties:
+        idToken:
+          example: "eyJ0eXAiOiJKV1QiLCJraWQiOiJiNFVYNTc0aHBZYXVERHhlaENGU25SaE9GbFk9IiwiYWxnIjoiUlMyNTYifQ.eyJhdF9oYXNoIjoiaVlDNGJIWVZLa1E5c3RYSlRUZU1CUSIsInN1YiI6IjkxNTMxMDIxODkiLCJhdWRpdFRyYWNraW5nSWQiOiI2NTUwYzlhZS0xNWNjLTQxMzQtYWE1YS1iN2NiNWIxNTIzNzEtNDAwNzM4MSIsImlzcyI6Imh0dHBzOi8vbG9naW4ubXRzLnJ1OjQ0My9hbXNlcnZlci9vYXV0aDIvcmVhbG1zL3Jvb3QvcmVhbG1zL3VzZXJzIiwidG9rZW5OYW1lIjoiaWRfdG9rZW4iLCJhY2Nlc3NfdG9rZW4iOiIwNjQ1NjdjNy1hNjYzLTQ2YTEtYTBjMi05NjU1ZTc1YTlmOGUiLCJhdWQiOiJ0ZXN0X1VNU19QdXNoX1NESyIsImNfaGFzaCI6ImdSVENMVlJlQTQ4ZFlBQXBuTUJwSVEiLCJvcmcuZm9yZ2Vyb2NrLm9wZW5pZGNvbm5lY3Qub3BzIjoiM2U0YjQ1YWItNWRkMS00YmUxLTk1Y2EtNjY5M2JkMzZjNjU5IiwidXBkYXRlZF9hdCI6IjAiLCJhenAiOiJ0ZXN0X1VNU19QdXNoX1NESyIsImF1dGhfdGltZSI6MTYyNDQyNTgyNiwicmVhbG0iOiIvdXNlcnMiLCJleHAiOjE2MjQ0Mjk0MjYsInRva2VuVHlwZSI6IkpXVFRva2VuIiwiaWF0IjoxNjI0NDI1ODI2fQ.36AZLEtVD4ypgJuRUDKm6x0PgVBlRmUpsS1m9iKCHr7ZZoOez1Zf4s2_iGEauNT5IngwOMXjV4Circxlm4a4h9D_ZgPvm8u2OUPSq1WM5a0B0SZdFBua1CPhJsVo7w5pyi8RHpSVcwl9bVL3QYovFiWxe7XigLa6nRBZkxO8GJ_B-1v39pEQxRWnrovnM1MNZqLWxLHfhcik2Z2yKfl3tCdPMA2FL_n_3YCtQwAJat8KpRjP9y3BPLRzl_iF8Rg3MwDnn7xAiUbJRosHnt9ywi6b8XXeYfmAmby8b8P1JeoY5HWI7aDjpuxSjCKLnxXF_wg7SrMeJiFBAcv4ZdS2pws"
+          description: SSO idToken
+          type: string
+        filter:
+          $ref: "#/components/schemas/Filter"
+        limit:
+          type: integer
+          minimum: 1
+          maximum: 5000
+          default: 100
+          example: 3
+          description: Опционально количество возвращаемых сообщений (если не задан, то отдается количество сообщений по умолчанию = 100)
+
+    CountMessagesRequest:
+      type: object
+      required:
+        - idToken
+        - filter
+      properties:
+        idToken:
+          example: "eyJ0eXAiOiJKV1QiLCJraWQiOiJiNFVYNTc0aHBZYXVERHhlaENGU25SaE9GbFk9IiwiYWxnIjoiUlMyNTYifQ.eyJhdF9oYXNoIjoiaVlDNGJIWVZLa1E5c3RYSlRUZU1CUSIsInN1YiI6IjkxNTMxMDIxODkiLCJhdWRpdFRyYWNraW5nSWQiOiI2NTUwYzlhZS0xNWNjLTQxMzQtYWE1YS1iN2NiNWIxNTIzNzEtNDAwNzM4MSIsImlzcyI6Imh0dHBzOi8vbG9naW4ubXRzLnJ1OjQ0My9hbXNlcnZlci9vYXV0aDIvcmVhbG1zL3Jvb3QvcmVhbG1zL3VzZXJzIiwidG9rZW5OYW1lIjoiaWRfdG9rZW4iLCJhY2Nlc3NfdG9rZW4iOiIwNjQ1NjdjNy1hNjYzLTQ2YTEtYTBjMi05NjU1ZTc1YTlmOGUiLCJhdWQiOiJ0ZXN0X1VNU19QdXNoX1NESyIsImNfaGFzaCI6ImdSVENMVlJlQTQ4ZFlBQXBuTUJwSVEiLCJvcmcuZm9yZ2Vyb2NrLm9wZW5pZGNvbm5lY3Qub3BzIjoiM2U0YjQ1YWItNWRkMS00YmUxLTk1Y2EtNjY5M2JkMzZjNjU5IiwidXBkYXRlZF9hdCI6IjAiLCJhenAiOiJ0ZXN0X1VNU19QdXNoX1NESyIsImF1dGhfdGltZSI6MTYyNDQyNTgyNiwicmVhbG0iOiIvdXNlcnMiLCJleHAiOjE2MjQ0Mjk0MjYsInRva2VuVHlwZSI6IkpXVFRva2VuIiwiaWF0IjoxNjI0NDI1ODI2fQ.36AZLEtVD4ypgJuRUDKm6x0PgVBlRmUpsS1m9iKCHr7ZZoOez1Zf4s2_iGEauNT5IngwOMXjV4Circxlm4a4h9D_ZgPvm8u2OUPSq1WM5a0B0SZdFBua1CPhJsVo7w5pyi8RHpSVcwl9bVL3QYovFiWxe7XigLa6nRBZkxO8GJ_B-1v39pEQxRWnrovnM1MNZqLWxLHfhcik2Z2yKfl3tCdPMA2FL_n_3YCtQwAJat8KpRjP9y3BPLRzl_iF8Rg3MwDnn7xAiUbJRosHnt9ywi6b8XXeYfmAmby8b8P1JeoY5HWI7aDjpuxSjCKLnxXF_wg7SrMeJiFBAcv4ZdS2pws"
+          description: SSO idToken
+          type: string
+        filter:
+          $ref: "#/components/schemas/Filter"
+
+    Filter:
+      type: object
+      required:
+        - app
+      properties:
+        app:
+          type: string
+          example: mymts.app
+          description: Имя приложения (определяет порядок выданных продуктов)
+        date_from:
+          type: integer
+          format: int64
+          example: "1628528279430261070"
+          description: Опционально дата начала (utc unix time в наносекундах)
+        date_to:
+          type: integer
+          format: int64
+          example: "1628528279430261070"
+          description: Опционально дата конца промежутка поиска (utc unix time в наносекундах)
+        flags:
+          $ref: "#/components/schemas/FlagsFilter"
+        message_ids:
+          type: array
+          items:
+            type: string
+          description: Дополнительный параметр для обновления сообщений по id (с случай обновления пачки сообщений по фильтру данный параметр игнорируется)
+        msg_category:
+          example: [ "push" ]
+          type: array
+          items:
+            x-omitempty: true
+            type: string
+          x-omitempty: true
+
+    UpdateMessagesRequest:
+      type: object
+      required:
+        - idToken
+        - filter
+        - flags_value
+      properties:
+        idToken:
+          example: "eyJ0eXAiOiJKV1QiLCJraWQiOiJiNFVYNTc0aHBZYXVERHhlaENGU25SaE9GbFk9IiwiYWxnIjoiUlMyNTYifQ.eyJhdF9oYXNoIjoiaVlDNGJIWVZLa1E5c3RYSlRUZU1CUSIsInN1YiI6IjkxNTMxMDIxODkiLCJhdWRpdFRyYWNraW5nSWQiOiI2NTUwYzlhZS0xNWNjLTQxMzQtYWE1YS1iN2NiNWIxNTIzNzEtNDAwNzM4MSIsImlzcyI6Imh0dHBzOi8vbG9naW4ubXRzLnJ1OjQ0My9hbXNlcnZlci9vYXV0aDIvcmVhbG1zL3Jvb3QvcmVhbG1zL3VzZXJzIiwidG9rZW5OYW1lIjoiaWRfdG9rZW4iLCJhY2Nlc3NfdG9rZW4iOiIwNjQ1NjdjNy1hNjYzLTQ2YTEtYTBjMi05NjU1ZTc1YTlmOGUiLCJhdWQiOiJ0ZXN0X1VNU19QdXNoX1NESyIsImNfaGFzaCI6ImdSVENMVlJlQTQ4ZFlBQXBuTUJwSVEiLCJvcmcuZm9yZ2Vyb2NrLm9wZW5pZGNvbm5lY3Qub3BzIjoiM2U0YjQ1YWItNWRkMS00YmUxLTk1Y2EtNjY5M2JkMzZjNjU5IiwidXBkYXRlZF9hdCI6IjAiLCJhenAiOiJ0ZXN0X1VNU19QdXNoX1NESyIsImF1dGhfdGltZSI6MTYyNDQyNTgyNiwicmVhbG0iOiIvdXNlcnMiLCJleHAiOjE2MjQ0Mjk0MjYsInRva2VuVHlwZSI6IkpXVFRva2VuIiwiaWF0IjoxNjI0NDI1ODI2fQ.36AZLEtVD4ypgJuRUDKm6x0PgVBlRmUpsS1m9iKCHr7ZZoOez1Zf4s2_iGEauNT5IngwOMXjV4Circxlm4a4h9D_ZgPvm8u2OUPSq1WM5a0B0SZdFBua1CPhJsVo7w5pyi8RHpSVcwl9bVL3QYovFiWxe7XigLa6nRBZkxO8GJ_B-1v39pEQxRWnrovnM1MNZqLWxLHfhcik2Z2yKfl3tCdPMA2FL_n_3YCtQwAJat8KpRjP9y3BPLRzl_iF8Rg3MwDnn7xAiUbJRosHnt9ywi6b8XXeYfmAmby8b8P1JeoY5HWI7aDjpuxSjCKLnxXF_wg7SrMeJiFBAcv4ZdS2pws"
+          description: SSO idToken
+          type: string
+        filter:
+          $ref: "#/components/schemas/Filter"
+        flags_value:
+          $ref: "#/components/schemas/FlagsValue"
+
+    SearchMessagesResponse:
+      required:
+        - unread_message_count
+        - messages
+      type: object
+      properties:
+        unread_message_count:
+          type: integer
+          minimum: 0
+          description: Количество НОВЫХ сообщений по заданным фильтрам
+        messages:
+          type: array
+          items: {
+                   $ref: "#/components/schemas/Message"
+          }
+
+    CountResponse:
+      required:
+        - count
+      type: object
+      properties:
+        count:
+          type: integer
+          description: Количетство сообщений пользователя
+          example: 3
+
+    Message:
+      type: object
+      required:
+        - user_flags
+        - user_id
+        - text
+        - title
+        - id
+      properties:
+        date:
+          type: integer
+          format: int64
+          example: "1628528279430261070"
+          description: Время в формате utc unix time в наносекундах
+        id:
+          type: string
+          description: ID сообщение в формате UUID
+          example: "226562c6-3a5c-4882-94f2-23beac29a000"
+        title:
+          type: string
+          example: "Время пополнить баланс?"
+          description: Заголовок пуша
+        text:
+          type: string
+          example: "Раз... и пополнен. Быстрое пополнение баланса в приложении Мой МТС."
+          description: Текс уведомления
+        url:
+          type: string
+          example: "mymts://action:payments/amount..."
+          description: URL в пуше
+        user_flags:
+          type: array
+          items:
+            $ref: "#/components/schemas/Flag"
+        user_id:
+          description: Идентификатор пользователя (msisdn)
+          example: "70000000000"
+          type: string
+        msg_category:
+          example: [ "push" ]
+          type: array
+          items:
+            x-omitempty: true
+            type: string
+          x-omitempty: true
+
+    Payload:
+      required:
+        - text
+        - title
+      properties:
+        callback-url:
+          type: string
+          example: "https://callback.mts.ru/app-call..."
+        msisdn:
+          type: string
+          example: "70000000000"
+          description: Идентификатор пользователя
+        text:
+          type: string
+          example: "Раз... и from пополнен. Быстрое пополнение баланса в приложении Мой МТС."
+          description: Текс уведомления
+        text-gravity:
+          type: string
+          example: "top"
+          description: Расположение
+        title:
+          type: string
+          example: "Время пополнить баланс?"
+          description: Заголовок пуша
+        title-open:
+          type: string
+        url:
+          type: string
+          example: "mymts://action:payments/amount..."
+          description: URL в пуше
+
+    FlagsValue:
+      type: object
+      properties:
+        read:
+          type: boolean
+        open:
+          type: boolean
+        deleted:
+          type: boolean
+
+    Flag:
+      description: Список возможных флагов сообщения
+      type: string
+      enum:
+        - read
+        - deleted
+        - open
+
+    FlagsFilter:
+      description: Параметр для фильтрации сообщений по заданным флагам
+      type: object
+      properties:
+        read:
+          type: boolean
+        open:
+          type: boolean
+
+    EmptySuccessResponse:
+      description: Запрос успешно выполнен
+      type: object
+
+    UncUpdateMessagesResponse:
+      description: Сообщения обновлены
+      type: object
+
+    UpdateMessagesResponse:
+      description: Сообщения обновлены
+      type: object
+      
+    iOSNotificationSettings:
+      type: object
+      required:
+        - app
+        - firebaseToken
+        - appVersion
+        - sdkVersion
+        - osVersion
+        - authorizationStatus
+        - alertSetting
+        - notificationCenterSetting
+        - lockScreenSetting
+        - alertStyle
+      properties:
+        app:
+          type: string
+          example: pushums.app
+          description: Имя приложения
+        firebaseToken:
+          type: string
+          example: "dd3UoIeOf0_-vpJwtXPyCq:APA91...3uXv"
+          description: FCM token
+        appVersion:
+          maxLength: 40
+          type: string
+          example: "1.0.1a"
+          description: Версия приложения
+        sdkVersion:
+          maxLength: 40
+          type: string
+          example: "0.5a"
+          description: Версия SDK
+        osVersion:
+          maxLength: 40
+          type: string
+          example: "10"
+          description: Версия Android
+        authorizationStatus:
+          $ref: '#/components/schemas/UNAuthorizationStatus'
+        alertSetting:
+          # The authorization status for displaying alerts.
+          $ref: '#/components/schemas/UNNotificationSetting'
+        notificationCenterSetting:
+          # The setting that indicates whether your app’s notifications appear in Notification Center.
+          $ref: '#/components/schemas/UNNotificationSetting'
+        lockScreenSetting:
+          # The setting that indicates whether your app’s notifications appear on a device’s Lock screen.
+          $ref: '#/components/schemas/UNNotificationSetting'
+        alertStyle:
+          $ref: '#/components/schemas/UNAlertStyle'
+    
+    UNAlertStyle:
+      description: |
+        Constants indicating the presentation styles for alerts.
+        * 0 - none
+        * 1 - banner
+        * 2 - alert
+      type: integer
+      enum:
+        - 0
+        - 1
+        - 2
+        
+    UNAuthorizationStatus:
+      description: |
+        Constants indicating whether the app is allowed to schedule notifications.
+        * 0 - notDetermined  
+        The user has not yet made a choice regarding whether the application may post user notifications.
+        * 1 - denied  
+        The application is not authorized to post user notifications.
+        * 2 - authorized  
+        The application is authorized to post user notifications.
+        * 3 - provisional @available(iOS 12.0, *)  
+        The application is authorized to post non-interruptive user notifications.
+        * 4 - ephemeral @available(iOS 14.0, *)  
+        The application is temporarily authorized to post notifications. Only available to app clips.
+      type: integer
+      enum:
+        - 0
+        - 1
+        - 2
+        - 3
+        - 4
+        
+    UNNotificationSetting:
+      description: |
+        Constants indicating whether the app is allowed to schedule notifications.
+        * 0 - notSupported  
+        The application does not support this notification type.
+        * 1 - disabled  
+        The notification setting is turned off.
+        * 2 - enabled  
+        The notification setting is turned on.
+      type: integer
+      enum:
+        - 0
+        - 1
+        - 2
+        
+  
